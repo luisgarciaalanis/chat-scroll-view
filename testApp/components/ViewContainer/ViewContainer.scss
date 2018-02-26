@@ -1,0 +1,26 @@
+.view-container {
+    position: relative;
+    display: inline-block;
+    max-width: 300px;
+    min-height: 300px;
+    min-width: 300px;
+    height: 300px;
+    margin: 5px;
+    padding: 5px;
+    border-color: gray;
+    border-style: solid;
+    
+    .full-screen-button {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background-color: lightgray;
+
+        .icon-size-fullscreen {
+            color: black;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 3px 4px 3px 3px;
+        }
+    }
+}
