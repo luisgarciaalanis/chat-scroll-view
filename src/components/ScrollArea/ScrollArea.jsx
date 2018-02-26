@@ -11,6 +11,9 @@ class ScrollArea extends Component {
         this.onScrollbarMouseUp = this.onScrollbarMouseUp.bind(this);
         this.onScrollbarMouseMove = this.onScrollbarMouseMove.bind(this);
         this.onWheel = this.onWheel.bind(this);
+        this.onTouchStart = this.onTouchStart.bind(this);
+        this.onTouchMove = this.onTouchMove.bind(this);
+        this.onTouchEnd = this.onTouchEnd.bind(this);
         this.getScrollbarHeight = this.getScrollbarHeight.bind(this);
         this.getScrollableHeight = this.getScrollableHeight.bind(this);
         this.calculateThumbSize = this.calculateThumbSize.bind(this);
@@ -108,6 +111,28 @@ class ScrollArea extends Component {
         this.updateScrollableTop(event.deltaY);
     }
 
+    /**
+     * Toch events
+     */
+
+
+    onTouchStart(event) {
+        this.oldTouchY = event.changedTouches[0].clientY;
+    }
+
+    onTouchMove(event) {
+        const touchDelta = this.oldTouchY - event.changedTouches[0].clientY;
+        this.updateScrollableTop(touchDelta);
+    }
+
+    onTouchEnd(event) {
+        console.log(event.changedTouches);
+    }
+
+    /**
+     * Methods
+     */
+
     setThumbTop(top) {
         this.thumb.style.top = `${top}px`;
     }
@@ -197,7 +222,7 @@ class ScrollArea extends Component {
 
     render() {
         return (
-            <div className="scroll-area" ref={(scrollArea) => { this.scrollArea = scrollArea; }} onWheel={this.onWheel}>
+            <div className="scroll-area" ref={(scrollArea) => { this.scrollArea = scrollArea; }} onWheel={this.onWheel} onTouchStart={this.onTouchStart} onTouchMove={this.onTouchMove} onTouchEnd={this.onTouchEnd}>
                 <div className="scrollbar-bar" ref={(scrollbar) => { this.scrollbar = scrollbar; }} >
                     <div className="scrollbar-thumb" ref={(thumb) => { this.thumb = thumb; }} onMouseDown={this.onScrollbarMouseDown} />
                 </div>
