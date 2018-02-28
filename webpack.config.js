@@ -34,6 +34,10 @@ const config = {
             test: /\.js?/,
             include: [srcDir, testAppDir],
             loader: 'babel-loader',
+            query: {
+                plugins: ['transform-runtime', 'transform-class-properties'],
+                presets: ['es2017', 'react'],
+            },
         },
         {
             test: /\.scss$/,

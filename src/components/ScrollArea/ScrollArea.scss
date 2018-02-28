@@ -1,5 +1,8 @@
 .scroll-area {
     position: relative;
+    display: block;
+    background-color: black;
+    color: white;
     overflow: hidden;
     height: inherit;
 

@@ -1,0 +1,9 @@
+.app-main {
+    position: relative;
+    width: 100%;
+    .react-grid-item {
+        .react-resizable-handle {
+            transform: translate(7px, 22px);
+        }
+    }
+}

@@ -16,6 +16,7 @@
       "arrow-parens": ["error", "always"],
       "jsx-a11y/no-static-element-interactions": 0,
       "react/sort-comp": 0,
+      "react/jsx-indent-props": [ 2, 4 ],
       "react/prefer-stateless-function": 0,
       "react/no-unused-state": 0,
       "react/jsx-indent": [1, 4],

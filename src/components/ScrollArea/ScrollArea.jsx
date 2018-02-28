@@ -6,14 +6,20 @@ class ScrollArea extends Component {
     constructor(props) {
         super(props);
 
-        // binds
+        // #region props
+        this.dataSource = this.props.config.dataSource;
+        this.bufferSize = this.props.config.bufferSize;
+        this.rowView = this.props.config.rowView;
+        // #endregion
+
+        // #region binds
         this.onScrollbarMouseDown = this.onScrollbarMouseDown.bind(this);
         this.onScrollbarMouseUp = this.onScrollbarMouseUp.bind(this);
         this.onScrollbarMouseMove = this.onScrollbarMouseMove.bind(this);
         this.onWheel = this.onWheel.bind(this);
         this.onTouchStart = this.onTouchStart.bind(this);
         this.onTouchMove = this.onTouchMove.bind(this);
-        this.onTouchEnd = this.onTouchEnd.bind(this);
+        this.onDataSourceUpdate = this.onDataSourceUpdate.bind(this);
         this.getScrollbarHeight = this.getScrollbarHeight.bind(this);
         this.getScrollableHeight = this.getScrollableHeight.bind(this);
         this.calculateThumbSize = this.calculateThumbSize.bind(this);
@@ -21,22 +27,35 @@ class ScrollArea extends Component {
         this.getScrollablePercentage = this.getScrollablePercentage.bind(this);
         this.getThumbTop = this.getThumbTop.bind(this);
         this.getThumbHeight = this.getThumbHeight.bind(this);
+        // #endregion
 
-        // UI refs
+        // #region UI refs
         this.scrollArea = null;
         this.scrollable = null;
         this.scrollbar = null;
         this.thumb = null;
+        // #endregion
 
-        // members
+        // #region members
+        this.appendOnSubscriptionUpdates = true;
+        this.toggleState = false;
         this.oldPageY = 0;
         this.minThumbSize = 50;
+        this.lines = [];
+        this.renderedRows = [];
+        this.unsubscribe = this.dataSource.subscribe(this.onDataSourceUpdate);
+        // #endregion
     }
 
+    // #region component lifecycle
     componentDidMount() {
         this.thumb.style.top = '0px';
         this.calculateThumbSize();
         this.updateScrollbarTopFromScrollable();
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
     }
 
     componentWillUpdate() {
@@ -50,10 +69,9 @@ class ScrollArea extends Component {
         }
         this.updateScrollbarTopFromScrollable();
     }
+    // #endregion
 
-    /**
-     * Mouse events
-     */
+    // #region Mouse events
 
     onScrollbarMouseDown(event) {
         this.oldPageY = event.pageY;
@@ -110,11 +128,9 @@ class ScrollArea extends Component {
     onWheel(event) {
         this.updateScrollableTop(event.deltaY);
     }
+    // #endregion
 
-    /**
-     * Toch events
-     */
-
+    // #region Toch events
 
     onTouchStart(event) {
         this.oldTouchY = event.changedTouches[0].clientY;
@@ -124,14 +140,9 @@ class ScrollArea extends Component {
         const touchDelta = this.oldTouchY - event.changedTouches[0].clientY;
         this.updateScrollableTop(touchDelta);
     }
+    // #endregion
 
-    onTouchEnd(event) {
-        console.log(event.changedTouches);
-    }
-
-    /**
-     * Methods
-     */
+    // #region Helper methods
 
     setThumbTop(top) {
         this.thumb.style.top = `${top}px`;
@@ -219,15 +230,53 @@ class ScrollArea extends Component {
         this.scrollable.scrollTop = this.scrollable.scrollHeight;
         this.updateScrollbarTopFromScrollable();
     }
+    // #endregion
+
+    // #region DataSource methods
+
+    onDataSourceUpdate(data) {
+        // remove head element if buffer is full
+        if (this.isBufferFull()) {
+            this.lines.splice(0, 1);
+        }
+
+        // append element only if viewPort at bottom of stream
+        if (this.appendOnSubscriptionUpdates) {
+            this.lines.push(data);
+        }
+
+        this.setState({
+            toggleState: !this.toggleState,
+        });
+    }
+
+    isBufferFull() {
+        return this.lines.length > this.bufferSize;
+    }
+
+    // #endregion
+
+    renderLines() {
+        const Cell = this.rowView;
+        const cachedLinesCount = this.lines.length;
+        const linesToRender = [];
+        let index = 0;
+
+        for (; index < cachedLinesCount; index++) {
+            linesToRender.push((<Cell key={index} data={this.lines[index]} />));
+        }
+
+        return linesToRender;
+    }
 
     render() {
         return (
-            <div className="scroll-area" ref={(scrollArea) => { this.scrollArea = scrollArea; }} onWheel={this.onWheel} onTouchStart={this.onTouchStart} onTouchMove={this.onTouchMove} onTouchEnd={this.onTouchEnd}>
+            <div className="scroll-area" ref={(scrollArea) => { this.scrollArea = scrollArea; }} onWheel={this.onWheel} onTouchStart={this.onTouchStart} onTouchMove={this.onTouchMove} >
                 <div className="scrollbar-bar" ref={(scrollbar) => { this.scrollbar = scrollbar; }} >
                     <div className="scrollbar-thumb" ref={(thumb) => { this.thumb = thumb; }} onMouseDown={this.onScrollbarMouseDown} />
                 </div>
                 <div className="scrolled-content" ref={(node) => { this.scrollable = node; }} onScroll={this.onScroll} onMouseMove={this.onMouseMove}>
-                    {this.props.children}
+                    {this.renderLines()}
                 </div>
             </div>
         );
@@ -235,7 +284,15 @@ class ScrollArea extends Component {
 }
 
 ScrollArea.propTypes = {
-    children: PropTypes.node.isRequired,
+    config: PropTypes.shape({
+        rowView: PropTypes.func.isRequired,
+        bufferSize: PropTypes.number.isRequired,
+        dataSource: PropTypes.shape({
+            subscribe: PropTypes.func.isRequired,
+            fetchPrevious: PropTypes.func.isRequired,
+            fetchNext: PropTypes.func.isRequired,
+        }),
+    }).isRequired,
 };
 
 export default ScrollArea;
