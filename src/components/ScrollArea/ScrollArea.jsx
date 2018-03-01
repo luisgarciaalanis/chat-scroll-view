@@ -40,7 +40,7 @@ class ScrollArea extends Component {
         this.appendOnSubscriptionUpdates = true;
         this.toggleState = false;
         this.oldPageY = 0;
-        this.minThumbSize = 50;
+        this.minThumbSize = 60;
         this.lines = [];
         this.renderedRows = [];
         this.unsubscribe = this.dataSource.subscribe(this.onDataSourceUpdate);
@@ -172,6 +172,10 @@ class ScrollArea extends Component {
         return this.scrollable.scrollHeight - this.scrollable.clientHeight;
     }
 
+    isScrolledToBottom() {
+        return this.scrollable.scrollTop === this.getMaxScrollTop();
+    }
+
     calculateThumbSize() {
         const scrollbarHeight = this.getScrollbarHeight();
         const scrollableHeight = this.getScrollableHeight();
@@ -230,14 +234,25 @@ class ScrollArea extends Component {
         this.scrollable.scrollTop = this.scrollable.scrollHeight;
         this.updateScrollbarTopFromScrollable();
     }
+
+    isViewportScrolled() {
+        const { scrollable } = this;
+        return scrollable && (this.scrollable.scrollHeight > scrollable.offsetHeight);
+    }
     // #endregion
 
     // #region DataSource methods
 
     onDataSourceUpdate(data) {
+        this.appendOnSubscriptionUpdates = true;
+
         // remove head element if buffer is full
         if (this.isBufferFull()) {
-            this.lines.splice(0, 1);
+            if (this.isScrolledToBottom()) {
+                this.lines.splice(0, 1);
+            } else {
+                this.appendOnSubscriptionUpdates = false;
+            }
         }
 
         // append element only if viewPort at bottom of stream
@@ -266,8 +281,8 @@ class ScrollArea extends Component {
             this.lines.unshift(...fetchedRows);
             this.lines.splice(removeIndex, itemsCount);
 
-            console.log('LOADING PREV');
-            console.log(fetchedRows);
+            // console.log('LOADING PREV');
+            // console.log(fetchedRows);
             this.setState({
                 stateToggle: !this.stateToggle,
             });
@@ -288,6 +303,33 @@ class ScrollArea extends Component {
         return linesToRender;
     }
 
+    renderTopLoader() {
+        let topLoader = '';
+        if (this.isViewportScrolled()) {
+            topLoader = (
+                <div className="loading-message" ref={(node) => { this.topLoaderNode = node; }} >
+                    Loading...
+                </div>
+            );
+        }
+
+        return topLoader;
+    }
+
+    renderBottomLoader() {
+        let bottomLoader = '';
+
+        if (this.isBufferFull()) {
+            bottomLoader = (
+                <div className="loading-message" ref={(node) => { this.topLoaderNode = node; }} >
+                    Loading...
+                </div>
+            );
+        }
+
+        return bottomLoader;
+    }
+
     render() {
         return (
             <div className="scroll-area" ref={(scrollArea) => { this.scrollArea = scrollArea; }} onWheel={this.onWheel} onTouchStart={this.onTouchStart} onTouchMove={this.onTouchMove} >
@@ -295,7 +337,9 @@ class ScrollArea extends Component {
                     <div className="scrollbar-thumb" ref={(thumb) => { this.thumb = thumb; }} onMouseDown={this.onScrollbarMouseDown} />
                 </div>
                 <div className="scrolled-content" ref={(node) => { this.scrollable = node; }} onScroll={this.onScroll} onMouseMove={this.onMouseMove}>
+                    {this.renderTopLoader()}
                     {this.renderLines()}
+                    {this.renderBottomLoader()}
                 </div>
             </div>
         );

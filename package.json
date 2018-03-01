@@ -1,6 +1,6 @@
 {
   "name": "chat-scroll-view",
-  "version": "0.2.0",
+  "version": "0.2.5",
   "private": true,
   "dependencies": {
     "css-loader": "^0.28.9",

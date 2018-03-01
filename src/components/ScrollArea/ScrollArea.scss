@@ -15,6 +15,11 @@
         position: relative;
         overflow: hidden;
         height: inherit;
+
+        .loading-message {
+            text-align: center;
+            margin: 2px;
+        }
     }
 
     .scrollbar-bar {
