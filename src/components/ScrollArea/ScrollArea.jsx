@@ -254,6 +254,25 @@ class ScrollArea extends Component {
         return this.lines.length > this.bufferSize;
     }
 
+    async fetchPreviousRows() {
+        let itemsCount = Math.floor(this.bufferSize / 3);
+        const fetchedRows = await this.dataSource.fetchPrevious(this.lines[0], itemsCount);
+        itemsCount = fetchedRows.length;
+
+        if (itemsCount > 0) {
+            const countDelta = this.lines.length - itemsCount;
+            const removeIndex = (countDelta >= 0) ? countDelta : 0;
+
+            this.lines.unshift(...fetchedRows);
+            this.lines.splice(removeIndex, itemsCount);
+
+            console.log('LOADING PREV');
+            console.log(fetchedRows);
+            this.setState({
+                stateToggle: !this.stateToggle,
+            });
+        }
+    }
     // #endregion
 
     renderLines() {
